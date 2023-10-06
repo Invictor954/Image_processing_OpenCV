@@ -13,4 +13,4 @@ Integrantes
 - Tomasto Solis, Victor Eduardo
 - Cespedes Flores, Sebastian
 - Villacis, David
-- Diego
+- De la Cruz Torres, Diego

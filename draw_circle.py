@@ -46,3 +46,7 @@ for n in range(0,opc):
 				img[ind + 2] = img[ind + 2] ^ B
 
 
+# aqui se genera la imagen
+with open('salida.ppm', 'wb') as f:
+	f.write(bytearray(header, 'ascii'))
+	img.tofile(f)

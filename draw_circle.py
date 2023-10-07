@@ -18,4 +18,31 @@ for n in range(0,opc):
 	G = ent[4]
 	B = ent[5]
 
+	##DIBUJAR UN CIRCULO
+	##validacion de de las entradas
+	c=X-r
+	e=X+r
+	d=Y-r
+	h=Y+r
+	if X-r < 0:
+		c=0
+	if Y-r < 0:
+		d=0
+	if X+r <0:
+		e=0
+	if Y+r <0:
+		h=0
+	if X+r > 960:
+		e=960
+	if Y+r > 1024:
+		h=1024
+	for x in range(c,e):
+		for y in range(d,h):
+			ind = 3 * (x * width + y)
+			#Se verifica que el punto este dentro del circulo
+			if (x-X)*(x-X)+(y-Y)*(y-Y)<=r*r :
+				img[ind] = img[ind] ^ R
+				img[ind + 1] = img[ind + 1] ^ G
+				img[ind + 2] = img[ind + 2] ^ B
+
 

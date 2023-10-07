@@ -15,7 +15,10 @@
 #include<opencv2/highgui.hpp>
 #include<omp.h>
 
-// Divide la imagen en COLxROW bloques
+/* 
+	Divide la imagen en COLxROW bloques
+	devuelve un vector con los bloques
+*/
 std::vector<cv::Mat> dividirImagen(cv::Mat image, int COLS, int ROWS){
 
 	// Obtener el tamaño de la imagen
@@ -28,10 +31,9 @@ std::vector<cv::Mat> dividirImagen(cv::Mat image, int COLS, int ROWS){
 	int block_height, block_width;
 	block_height = img_height/ROWS;
 	block_width = img_width/COLS;
-	std::vector<cv::Mat> bloques;
 
 	// Generar bloques y agregarlos al vector 
-	
+	std::vector<cv::Mat> bloques;
 	for(int y=0;y<ROWS;y++)
 	{
 		for(int x=0;x<COLS;x++)
@@ -46,53 +48,93 @@ std::vector<cv::Mat> dividirImagen(cv::Mat image, int COLS, int ROWS){
 	return bloques;
 }
 
+/*
+	Recibe un vector con bloques(imagenes)
+	devuelve una imagen compuesta por esos bloques
+*/
 cv::Mat unirBloques(std::vector<cv::Mat> bloques, int COLS, int ROWS)
 {
-	cv::Mat imagen, tmp2,tmp4,tmp8;
-	std::vector<cv::Mat> sub_8blq;
-	std::vector<cv::Mat> sub_4blq;
-	std::vector<cv::Mat> sub_2blq;
+	cv::Mat imagen, tmp2x1,tmp4x1,tmp4x2;
+	std::vector<cv::Mat> sub_4x2blq;
+	std::vector<cv::Mat> sub_4x1blq;
+	std::vector<cv::Mat> sub_2x1blq;
 
-
+	// Crea 8 bloques de dimension 2x1 uniendo horizontalmente los bloques
 	for (int i = 0; i < COLS*ROWS ; i+=2)
 	{
-		tmp2 = cv::Mat();
-		cv::hconcat(bloques[i], bloques[i+1],tmp2);
-		sub_2blq.push_back(tmp2);
+		tmp2x1 = cv::Mat();
+		cv::hconcat(bloques[i], bloques[i+1],tmp2x1);
+		sub_2x1blq.push_back(tmp2x1);
 	}
 
+	// Crea 4 bloques de dimension 4x1 uniendo los bloques resultantes del bucle anterior
 	for (int i = 0; i < COLS*ROWS/2; i+=2)
 	{
-		tmp4 = cv::Mat();
-		cv::hconcat(sub_2blq[i], sub_2blq[i+1],tmp4);
-		sub_4blq.push_back(tmp4);
+		tmp4x1 = cv::Mat();
+		cv::hconcat(sub_2x1blq[i], sub_2x1blq[i+1],tmp4x1);
+		sub_4x1blq.push_back(tmp4x1);
 	}
 
+	// Crea 2 bloques de dimension 4x2 uniendo los bloques resultantes del bucle anterior
 	for (int i = 0; i < COLS*ROWS/4; i+=2)
 	{
-		tmp8 = cv::Mat();
-		cv::vconcat(sub_4blq[i], sub_4blq[i+1],tmp8);
-		sub_8blq.push_back(tmp8);
+		tmp4x2 = cv::Mat();
+		cv::vconcat(sub_4x1blq[i], sub_4x1blq[i+1],tmp4x2);
+		sub_4x2blq.push_back(tmp4x2);
 	}
 	
-	cv::vconcat(sub_8blq[0],sub_8blq[1],imagen);
+	// Concatena los dos bloques de dimension 4x2 en la imagen final de 4x4
+	cv::vconcat(sub_4x2blq[0],sub_4x2blq[1],imagen);
 	
 	return imagen;
 }	
 
+/* 
+	Aplica un filtro multiplicando por 
+	un factor los valores RGB de todos 
+	los pixeles en la imagen
+*/
+cv::Mat processPixels(cv::Mat img, cv::Vec3f filter)
+{
+	cv::Mat prod = img;
+	cv::Vec3b color;
+
+	#pragma omp parallel for collapse(2)
+	for(int rows=0;rows<prod.rows;rows++)
+	{
+		for(int cols=0; cols<prod.cols;cols++)
+		{
+			color=prod.at<cv::Vec3b>(rows,cols);
+			
+			color[0]=color[0]*filter[0];
+			color[1]=color[1]*filter[1];
+			color[2]=color[2]*filter[2];
+
+			prod.at<cv::Vec3b>(rows,cols)=color;
+		}
+	}
+
+	return prod;
+
+}
+
+/*
+	Main
+*/
 int main(int argc, char** argv){
 
 	// Inicializacion de variables
-	cv::String img_file = "./imagenes/test.jpg";
+	cv::String img_file = "./imagenes/test2.jpg";
 	double inicio_ejecucion, tiempo_ejecucion;
-	double inicio_filtro, fin_filtro;
+	double inicio_filtro_datos, fin_filtro_datos;
+	double inicio_filtro_tareas, fin_filtro_tareas;
 	const int COL_BLOQUES = 4;
 	const int ROW_BLOQUES = 4; 
 
 	// Inicio del tiempo de ejecucion
 	inicio_ejecucion = omp_get_wtime();
 
-	/* Tarea 1:  Cargar la imagen */
+	/*** Tarea 1:  Cargar la imagen ***/
 	cv::Mat image = cv::imread(img_file);
 
     // Mensaje de error si no se encuentra la imagen
@@ -101,13 +143,11 @@ int main(int argc, char** argv){
         std::cout << "No se encontro la imagen" << std::endl;
     }
 
-	/* Tarea 2: Dividir la imagen */
+	/*** Tarea 2: Dividir la imagen ***/
 	std::vector<cv::Mat> bloques = dividirImagen(image, COL_BLOQUES, ROW_BLOQUES);
 
-	/* Tarea 3: Crear los filtros */
-	inicio_filtro = omp_get_wtime();
-
-	// Creando kernels para filtros
+	/*** Tarea 3: Filtrado ***/
+	// Definir kernels para filtros convolutivos
 	std::vector<cv::Mat>kernels;
 
 	float kernels_filtros[16][9] = {
@@ -128,29 +168,97 @@ int main(int argc, char** argv){
 		{1020,1020,1020,0,0,0,-1020,-1020,-1020}, // Filtro 15
 		{255,0,-255,255,0,-255,255,0,-255}, // Filtro 16
 	};
-	
+
 	for(int i=0; i<COL_BLOQUES*ROW_BLOQUES; i++)
 	{
 		kernels.push_back(cv::Mat(3,3,CV_32F,kernels_filtros[i]));
 	}
 
-	/* Tarea 4: Aplicar filtros */
+	// Definir vectores para filtros rgb
+	std::vector<cv::Vec3f>filtros;
+	float valores_filtros[16][3] = {
+		{1,1,1},
+		{1,0,0},
+		{0,1,0},
+		{0,0,1},
+		{1,1,0},
+		{1,0,1},
+		{0,1,1},
+		{0.8,0.5,1},
+		{0.2,1,1.4},
+		{0,0.2,1.7}, 
+		{0.5,0.5,0.5}, 
+		{0.1,2,1}, 
+		{0,0,0},	
+		{2,0.2,0.1}, 
+		{0,0.1,0.9}, 
+		{0.5,0.5,0.5}, 
+	};
+
+	for(int i=0; i<COL_BLOQUES*ROW_BLOQUES; i++)
+	{
+		filtros.push_back(cv::Vec3f(valores_filtros[i][0],valores_filtros[i][1],valores_filtros[i][2]));
+	}
+
+	/*** 
+	
+		Paralelismo de datos
+	
+	***/
 	std::vector<cv::Mat>bloques_filtrados(16);
 
+	// Inicia tiempo
+	inicio_filtro_datos = omp_get_wtime();
+	// Aplica los filtros
 	#pragma omp parallel for
 	for(int i = 0; i<bloques.size();i++)
 	{
-	    cv::filter2D(bloques[i], bloques_filtrados[i], -1 , kernels[i]);
+	    //cv::filter2D(bloques[i], bloques_filtrados[i], -1 , kernels[i]);
+		bloques_filtrados[i] = processPixels(bloques[i],filtros[i]);
 	}
 
-	/* Tarea 5: Juntar los bloques en una sola imagen */
+	// Calculo del tiempo de filtrado
+	fin_filtro_datos = omp_get_wtime() - inicio_filtro_datos;
+	std::cout << "Tiempo aplicando filtros (datos): " << fin_filtro_datos << std::endl;
+	// Guardar la imagen
 	cv::Mat imagen_multifiltro = unirBloques(bloques_filtrados, COL_BLOQUES, ROW_BLOQUES);
-	cv::imwrite("./imagenes/producto.jpg", imagen_multifiltro);
+	cv::imwrite("./imagenes/producto_datos.jpg", imagen_multifiltro);
 
-	/* Tarea 6: Calcular tiempos de ejecucion */
-	// Calculo del tiempo de filtro
-	fin_filtro = omp_get_wtime() - inicio_filtro;
-	std::cout << "Tiempo aplicando filtros: " << fin_filtro << std::endl;
+	/***
+		
+		Paralelismo de Tareas
+		
+	***/
+	// reiniciar variables
+	imagen_multifiltro = cv::Mat();
+	bloques_filtrados = std::vector<cv::Mat>(16);
+	// Inicia tiempo
+	inicio_filtro_tareas = omp_get_wtime();
+	// Aplicar filtros
+
+	#pragma omp parallel num_threads(2)
+	{
+
+		int thread_id = omp_get_thread_num();
+        int chunk_size = bloques.size() / omp_get_num_threads();
+		int start = thread_id * chunk_size;
+        int end = (thread_id == omp_get_num_threads() - 1) ? bloques.size() : start + chunk_size;
+		for (int i = start; i < end; i++)
+		{
+			bloques_filtrados[i] = processPixels(bloques[i],filtros[i]);	
+		}
+		
+		
+	} 
+
+	// Calculo del tiempo de filtrado
+	fin_filtro_tareas = omp_get_wtime() - inicio_filtro_tareas;
+	std::cout << "Tiempo aplicando filtros (tareas): " << fin_filtro_tareas << std::endl;
+	// Guardar la imagen
+	imagen_multifiltro =  unirBloques(bloques_filtrados, COL_BLOQUES, ROW_BLOQUES);
+	cv::imwrite("./imagenes/producto_tareas.jpg", imagen_multifiltro);
+
+	/*** fin paralelismo de Datos ***/
 
 	// Calculo del tiempo total de ejecucion
 	tiempo_ejecucion = omp_get_wtime() - inicio_ejecucion;

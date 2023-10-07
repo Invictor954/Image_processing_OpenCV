@@ -33,3 +33,6 @@ input_filename = 'image.ppm'
 
 # Leer el archivo PPM
 image_width, image_height, image_data = ppmread(input_filename)
+
+# Se asigna el header
+header = f'P6 {image_width} {image_height} {255}\n'

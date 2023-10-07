@@ -191,8 +191,8 @@ int main(int argc, char** argv){
 	#pragma omp parallel for
 	for(int i = 0; i<bloques.size();i++)
 	{
-	    //cv::filter2D(bloques[i], bloques_filtrados[i], -1 , kernels[i]);
-		bloques_filtrados[i] = processPixels(bloques[i],filtros[i]);
+	    cv::filter2D(bloques[i], bloques_filtrados[i], -1 , kernels[i]);
+		//bloques_filtrados[i] = processPixels(bloques[i],filtros[i]);
 	}
 
 	// Calculo del tiempo de filtro en hilos

@@ -236,6 +236,21 @@ int main(int argc, char** argv){
 	inicio_filtro_tareas = omp_get_wtime();
 	// Aplicar filtros
 
+	#pragma omp parallel num_threads(2)
+	{
+
+		int thread_id = omp_get_thread_num();
+        int chunk_size = bloques.size() / omp_get_num_threads();
+		int start = thread_id * chunk_size;
+        int end = (thread_id == omp_get_num_threads() - 1) ? bloques.size() : start + chunk_size;
+		for (int i = start; i < end; i++)
+		{
+			bloques_filtrados[i] = processPixels(bloques[i],filtros[i]);	
+		}
+		
+		
+	} 
+
 	// Calculo del tiempo de filtrado
 	fin_filtro_tareas = omp_get_wtime() - inicio_filtro_tareas;
 	std::cout << "Tiempo aplicando filtros (tareas): " << fin_filtro_tareas << std::endl;

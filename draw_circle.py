@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import random
 
 #SE ASIGNA LA IMAGENTXT
 #################################################
@@ -38,16 +39,16 @@ image_width, image_height, image_data = ppmread(input_filename)
 header = f'P6 {image_width} {image_height} {255}\n'
 
 # Continuar con el código original para realizar las operaciones en la imagen en formato PPM
-opc = int(input("Ingrese la cantidad de círculos a dibujar: "))
+opc = random.randint(5, 20)
 for n in range(0,opc):
-	ent = [int(x) for x in input().split()]
+
 	
-	X = ent[0]		#punto x
-	Y = ent[1]		#punto y
-	r = ent[2]		#radio
-	R = ent[3]		#rojo
-	G = ent[4]		#verde
-	B = ent[5]		#blanco 
+	X = random.randint(0, image_width)		#punto x
+	Y = random.randint(0, image_height)		#punto y
+	r = random.randint(5, 200)		#radio
+	R = random.randint(0, 255)		#rojo
+	G = random.randint(0, 255)		#verde
+	B = random.randint(0, 255)		#blanco 
 	##DIBUJAR UN CIRCULO
 	##validacionde de las entradas
 	c = max(X - r, 0)

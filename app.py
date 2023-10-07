@@ -24,3 +24,6 @@ def ppmread(filename):
         if not line.startswith('255'):
             print("ERROR: Expected 8-bit PPM with MAXVAL=255")
             return None
+        # Leer los datos de la imagen
+        image_data = bytearray(f.read(width * height * 3))
+        return width, height, image_data

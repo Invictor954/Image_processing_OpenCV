@@ -36,3 +36,28 @@ image_width, image_height, image_data = ppmread(input_filename)
 
 # Se asigna el header
 header = f'P6 {image_width} {image_height} {255}\n'
+
+opc = random.randint(5, 20)
+for n in range(0,opc):
+
+	#Definiendo los valores del circulo
+	X = random.randint(0, image_width)		#punto x
+	Y = random.randint(0, image_height)		#punto y
+	r = random.randint(5, 200)		        #radio
+	R = random.randint(0, 255)		        #rojo
+	G = random.randint(0, 255)		        #verde
+	B = random.randint(0, 255)		        #azul
+	##DIBUJAR UN CIRCULO
+	##validacionde de las entradas
+	c = max(X - r, 0)
+	e = min(X + r, image_width)
+	d = max(Y - r, 0)
+	h = min(Y + r, image_height)
+	for x in range(c,e):
+		for y in range(d,h):
+			ind = 3 * (x + image_width * y)
+			#Se verifica que el punto este dentro del circulo
+			if (x - X) * (x - X) + (y - Y) * (y - Y) <= r * r:
+				image_data[ind + 0] = image_data[ind + 0]^R        # rOJO
+				image_data[ind + 1] = image_data[ind + 1]^G        # VERDE
+				image_data[ind + 2] = image_data[ind + 2]^B        # AZUL

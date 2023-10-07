@@ -37,6 +37,8 @@ image_width, image_height, image_data = ppmread(input_filename)
 # Se asigna el header
 header = f'P6 {image_width} {image_height} {255}\n'
 
+start = time.time()
+
 opc = random.randint(5, 20)
 for n in range(0,opc):
 
@@ -58,7 +60,7 @@ for n in range(0,opc):
 			ind = 3 * (x + image_width * y)
 			#Se verifica que el punto este dentro del circulo
 			if (x - X) * (x - X) + (y - Y) * (y - Y) <= r * r:
-				image_data[ind + 0] = image_data[ind + 0]^R        # rOJO
+				image_data[ind + 0] = image_data[ind + 0]^R        # ROJO
 				image_data[ind + 1] = image_data[ind + 1]^G        # VERDE
 				image_data[ind + 2] = image_data[ind + 2]^B        # AZUL
                         

@@ -61,3 +61,8 @@ for n in range(0,opc):
 				image_data[ind + 0] = image_data[ind + 0]^R        # rOJO
 				image_data[ind + 1] = image_data[ind + 1]^G        # VERDE
 				image_data[ind + 2] = image_data[ind + 2]^B        # AZUL
+                        
+#Guardar la imagen resultante en formato PPM
+with open('salida.ppm', 'wb') as f:
+    f.write(bytearray(header, 'ascii'))
+    f.write(image_data)

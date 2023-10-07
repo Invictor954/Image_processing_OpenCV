@@ -28,32 +28,26 @@ std::vector<cv::Mat> dividirImagen(cv::Mat image, int COLS, int ROWS){
 	int block_height, block_width;
 	block_height = img_height/ROWS;
 	block_width = img_width/COLS;
-
 	std::vector<cv::Mat> bloques;
 
 	// Generar bloques y agregarlos al vector 
 	
-		for(int y=0;y<ROWS;y++)
+	for(int y=0;y<ROWS;y++)
+	{
+		for(int x=0;x<COLS;x++)
 		{
-			for(int x=0;x<COLS;x++)
-			{
-				cv::Rect roi( block_width  * x,
-						block_height * y,
-						block_width,
-						block_height);
-
+			cv::Rect roi( block_width  * x,
+					block_height * y,
+					block_width,
+					block_height);
 				bloques.push_back( image( roi ) );
-			}
 		}
-	
-	
-	
+	}
 	return bloques;
 }
 
 cv::Mat unirBloques(std::vector<cv::Mat> bloques, int COLS, int ROWS)
 {
-	int idx=0;
 	cv::Mat imagen, tmp2,tmp4,tmp8;
 	std::vector<cv::Mat> sub_8blq;
 	std::vector<cv::Mat> sub_4blq;
@@ -146,7 +140,7 @@ int main(int argc, char** argv){
 	#pragma omp parallel for
 	for(int i = 0; i<bloques.size();i++)
 	{
-	    cv::filter2D(bloques[i], bloques_filtrados[i], -1 , kernels[i], cv::Point2d(-1,-1),0.0);
+	    cv::filter2D(bloques[i], bloques_filtrados[i], -1 , kernels[i]);
 	}
 
 	/* Tarea 5: Juntar los bloques en una sola imagen */

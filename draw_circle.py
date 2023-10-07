@@ -11,14 +11,15 @@ opc=int(input())
 for n in range(0,opc):
 	ent = [int(x) for x in input().split()]
 	
-	X = ent[0]		#punto x
-	Y = ent[1]		#punto y
-	r = ent[2]		#radio
-	R = ent[3]		#rojo
-	G = ent[4]		#verde
-	B = ent[5]		#blanco 
+	X = ent[0]
+	Y = ent[1]
+	r = ent[2]
+	R = ent[3]
+	G = ent[4]
+	B = ent[5]
+
 	##DIBUJAR UN CIRCULO
-	##validacionde de las entradas
+	##validacion de de las entradas
 	c=X-r
 	e=X+r
 	d=Y-r
@@ -40,9 +41,9 @@ for n in range(0,opc):
 			ind = 3 * (x * width + y)
 			#Se verifica que el punto este dentro del circulo
 			if (x-X)*(x-X)+(y-Y)*(y-Y)<=r*r :
-				img[ind] = img[ind] ^ R              # rOJO
-				img[ind + 1] = img[ind + 1]^G       # VERDE
-				img[ind + 2] = img[ind + 2]^B        # AZUL
+				img[ind] = img[ind] ^ R
+				img[ind + 1] = img[ind + 1] ^ G
+				img[ind + 2] = img[ind + 2] ^ B
 
 
 # aqui se genera la imagen

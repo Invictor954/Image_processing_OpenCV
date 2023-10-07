@@ -53,7 +53,6 @@ cv::Mat unirBloques(std::vector<cv::Mat> bloques, int COLS, int ROWS)
 	std::vector<cv::Mat> sub_4blq;
 	std::vector<cv::Mat> sub_2blq;
 
-
 	for (int i = 0; i < COLS*ROWS ; i+=2)
 	{
 		tmp2 = cv::Mat();
@@ -80,12 +79,37 @@ cv::Mat unirBloques(std::vector<cv::Mat> bloques, int COLS, int ROWS)
 	return imagen;
 }	
 
+cv::Mat processPixels(cv::Mat img, cv::Vec3f filter)
+{
+	cv::Mat prod = img;
+	cv::Vec3b color;
+
+	#pragma omp parallel for collapse(2)
+	for(int rows=0;rows<prod.rows;rows++)
+	{
+		for(int cols=0; cols<prod.cols;cols++)
+		{
+			color=prod.at<cv::Vec3b>(rows,cols);
+			
+			color[0]=color[0]*filter[0];
+			color[1]=color[1]*filter[1];
+			color[2]=color[2]*filter[2];
+
+			prod.at<cv::Vec3b>(rows,cols)=color;
+		}
+	}
+
+	return prod;
+
+}
+
 int main(int argc, char** argv){
 
 	// Inicializacion de variables
-	cv::String img_file = "./imagenes/test.jpg";
+	cv::String img_file = "./imagenes/test2.jpg";
 	double inicio_ejecucion, tiempo_ejecucion;
-	double inicio_filtro, fin_filtro;
+	double inicio_filtro_hilos, fin_filtro_hilos;
+	double inicio_filtro_tareas, fin_filtro_tareas;
 	const int COL_BLOQUES = 4;
 	const int ROW_BLOQUES = 4; 
 
@@ -104,11 +128,10 @@ int main(int argc, char** argv){
 	/* Tarea 2: Dividir la imagen */
 	std::vector<cv::Mat> bloques = dividirImagen(image, COL_BLOQUES, ROW_BLOQUES);
 
-	/* Tarea 3: Crear los filtros */
-	inicio_filtro = omp_get_wtime();
-
+	/* Tarea 3: Filtrado */
 	// Creando kernels para filtros
 	std::vector<cv::Mat>kernels;
+	std::vector<cv::Vec3f>filtros;
 
 	float kernels_filtros[16][9] = {
 		{0,0,0,0,1,0,0,0,0},	// Filtro 1
@@ -128,29 +151,56 @@ int main(int argc, char** argv){
 		{1020,1020,1020,0,0,0,-1020,-1020,-1020}, // Filtro 15
 		{255,0,-255,255,0,-255,255,0,-255}, // Filtro 16
 	};
+
+	float valores_filtros[16][3] = {
+		{1,1,1},
+		{1,0,0},
+		{0,1,0},
+		{0,0,1},
+		{1,1,0},
+		{1,0,1},
+		{0,1,1},
+		{0.8,0.5,1},
+		{0.2,1,1.4},
+		{0,0.2,1.7}, 
+		{0.5,0.5,0.5}, 
+		{0.1,2,1}, 
+		{0,0,0},	
+		{2,0.2,0.1}, 
+		{0,0.1,0.9}, 
+		{0.5,0.5,0.5}, 
+	};
+	
 	
 	for(int i=0; i<COL_BLOQUES*ROW_BLOQUES; i++)
 	{
 		kernels.push_back(cv::Mat(3,3,CV_32F,kernels_filtros[i]));
 	}
 
-	/* Tarea 4: Aplicar filtros */
+	for(int i=0; i<COL_BLOQUES*ROW_BLOQUES; i++)
+	{
+		filtros.push_back(cv::Vec3f(valores_filtros[i][0],valores_filtros[i][1],valores_filtros[i][2]));
+	}
+
+	/* Paralelismo de hilos */
 	std::vector<cv::Mat>bloques_filtrados(16);
+
+	// Inicia tiempo de filtro en hilos
+	inicio_filtro_hilos = omp_get_wtime();
 
 	#pragma omp parallel for
 	for(int i = 0; i<bloques.size();i++)
 	{
-	    cv::filter2D(bloques[i], bloques_filtrados[i], -1 , kernels[i]);
+	    //cv::filter2D(bloques[i], bloques_filtrados[i], -1 , kernels[i]);
+		bloques_filtrados[i] = processPixels(bloques[i],filtros[i]);
 	}
 
-	/* Tarea 5: Juntar los bloques en una sola imagen */
-	cv::Mat imagen_multifiltro = unirBloques(bloques_filtrados, COL_BLOQUES, ROW_BLOQUES);
-	cv::imwrite("./imagenes/producto.jpg", imagen_multifiltro);
+	// Calculo del tiempo de filtro en hilos
+	inicio_filtro_hilos = omp_get_wtime() - inicio_filtro_hilos;
+	std::cout << "Tiempo aplicando filtros (hilos): " << inicio_filtro_hilos << std::endl;
 
-	/* Tarea 6: Calcular tiempos de ejecucion */
-	// Calculo del tiempo de filtro
-	fin_filtro = omp_get_wtime() - inicio_filtro;
-	std::cout << "Tiempo aplicando filtros: " << fin_filtro << std::endl;
+	cv::Mat imagen_multifiltro = unirBloques(bloques_filtrados, COL_BLOQUES, ROW_BLOQUES);
+	cv::imwrite("./imagenes/producto_hilos.jpg", imagen_multifiltro);
 
 	// Calculo del tiempo total de ejecucion
 	tiempo_ejecucion = omp_get_wtime() - inicio_ejecucion;

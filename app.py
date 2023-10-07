@@ -66,3 +66,5 @@ for n in range(0,opc):
 with open('salida.ppm', 'wb') as f:
     f.write(bytearray(header, 'ascii'))
     f.write(image_data)
+
+cv2.imwrite('salida_part.png', cv2.imread('salida.ppm'))

@@ -1,6 +1,6 @@
 # Image_processing_OpenCV
 
-Parcial - Procesamiento de Imágenes 
+Grupo 1 - Parcial - Procesamiento de Imágenes 
 Trabajo Parcial del curso de Programacion Concurrente y Paralela de la UNMSM
 
 1. Implementa un programa en C que realice el procesamiento paralelo de una imagen utilizando hilos. Divide la imagen en secciones y permite que cada hilo aplique un filtro o manipulación a su sección antes de combinar los resultados. 

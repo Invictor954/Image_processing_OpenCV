@@ -27,3 +27,9 @@ def ppmread(filename):
         # Leer los datos de la imagen
         image_data = bytearray(f.read(width * height * 3))
         return width, height, image_data
+    
+# Nombre del archivo PPM de entrada
+input_filename = 'image.ppm'
+
+# Leer el archivo PPM
+image_width, image_height, image_data = ppmread(input_filename)

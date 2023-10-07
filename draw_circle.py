@@ -1,10 +1,11 @@
 import cv2
 import numpy as np
 import random
+import time
 
 #SE ASIGNA LA IMAGENTXT
 #################################################
-cv2.imwrite('image.ppm', cv2.imread('waves.png'))
+cv2.imwrite('image.ppm', cv2.imread('image.png'))
 #################################################
 
 # Función para leer un archivo PPM en formato binario (P6)
@@ -37,7 +38,10 @@ image_width, image_height, image_data = ppmread(input_filename)
 
 # Se asigna el header
 header = f'P6 {image_width} {image_height} {255}\n'
-
+################################################################################################
+#CONCURRENTE
+#################################################################################################
+start = time.time()
 # Continuar con el código original para realizar las operaciones en la imagen en formato PPM
 opc = random.randint(5, 20)
 for n in range(0,opc):
@@ -45,10 +49,10 @@ for n in range(0,opc):
 	
 	X = random.randint(0, image_width)		#punto x
 	Y = random.randint(0, image_height)		#punto y
-	r = random.randint(5, 200)		#radio
-	R = random.randint(0, 255)		#rojo
-	G = random.randint(0, 255)		#verde
-	B = random.randint(0, 255)		#blanco 
+	r = random.randint(5, 200)		        #radio
+	R = random.randint(0, 255)		        #rojo
+	G = random.randint(0, 255)		        #verde
+	B = random.randint(0, 255)		        #blanco 
 	##DIBUJAR UN CIRCULO
 	##validacionde de las entradas
 	c = max(X - r, 0)
@@ -69,4 +73,30 @@ with open('salida.ppm', 'wb') as f:
     f.write(bytearray(header, 'ascii'))
     f.write(image_data)
 
-cv2.imwrite('salida.png', cv2.imread('salida.ppm'))
+cv2.imwrite('salida_concurrente.png', cv2.imread('salida.ppm'))
+end = time.time()
+print(end - start)
+#######################################################################################
+#PARALELISMO USANDO HILOS
+######################################################################################
+start = time.time()
+
+cv2.imwrite('salida_parh.png', cv2.imread('salida.ppm'))
+end = time.time()
+print(end - start)
+#######################################################################################
+#PARALELISMO DE DATOS
+######################################################################################
+start = time.time()
+
+cv2.imwrite('salida_pard.png', cv2.imread('salida.ppm'))
+end = time.time()
+print(end - start)
+#######################################################################################
+#PARALELISMO DE TAREAS
+######################################################################################
+start = time.time()
+
+cv2.imwrite('salida_part.png', cv2.imread('salida.ppm'))
+end = time.time()
+print(end - start)
